@@ -1,9 +1,5 @@
 const express = require('express');
-const fs = require('fs');
-const path = require('path');
 const router = express.Router();
-const DEBUG_LOG = path.join(__dirname, '../../debug-6e2177.log');
-const debugLog = (payload) => { try { fs.appendFileSync(DEBUG_LOG, JSON.stringify({ sessionId: '6e2177', timestamp: Date.now(), ...payload }) + '\n'); } catch (_) {} };
 const { body, validationResult } = require('express-validator');
 const Pairing = require('../models/Pairing');
 const User = require('../models/User');
@@ -40,7 +36,7 @@ router.post('/', [
 
     // Prevent duplicate pairings? Requirements don't explicitly forbid multiple pairings between same users, 
     // but usually a good idea. We'll allow it or skip it to stick strictly to requirements.
-    
+
     const newPairing = new Pairing({
       mentor: mentor.id,
       mentee: mentee.id,
@@ -70,16 +66,13 @@ router.get('/', async (req, res) => {
     }
 
     const roleLower = role ? role.toLowerCase() : null;
-    let roleBranch = 'none';
+
     if (roleLower === 'mentor') {
       query.mentor = userId;
-      roleBranch = 'mentor';
     } else if (roleLower === 'mentee') {
       query.mentee = userId;
-      roleBranch = 'mentee';
     } else if (roleLower === 'observer') {
       query.observers = userId;
-      roleBranch = 'observer';
     } else {
       query.$or = [
         { mentor: userId },
@@ -87,9 +80,6 @@ router.get('/', async (req, res) => {
         { observers: userId }
       ];
     }
-    // #region agent log
-    debugLog({ runId: 'post-fix', location: 'pairings.js:GET-handler1', message: 'pairings filter', hypothesisId: 'A', data: { status, role, roleLower, roleBranch, queryKeys: Object.keys(query) } });
-    // #endregion
 
     const pairings = await Pairing.find(query)
       .populate('mentor', 'name email')
@@ -97,9 +87,6 @@ router.get('/', async (req, res) => {
       .populate('observers', 'name email')
       .sort({ createdAt: -1 });
 
-    // #region agent log
-    debugLog({ location: 'pairings.js:GET-handler1-result', message: 'pairings count', hypothesisId: 'A,B', data: { count: pairings.length, roleBranch } });
-    // #endregion
     res.json(pairings);
   } catch (err) {
     console.error(err.message);
@@ -110,47 +97,15 @@ router.get('/', async (req, res) => {
 // @route   GET /api/pairings/:pairingId
 // @desc    Get a single pairing by ID
 // @access  Private
-// @route   GET /api/pairings
-// @desc    Get all pairings for logged in user (with filters)
-// @access  Private
-router.get('/', async (req, res) => {
+router.get('/:pairingId', checkRole(['Mentor', 'Mentee', 'Observer']), async (req, res) => {
   try {
-    const { status, role } = req.query;
-    const userId = req.user.id;
+    const pairing = req.pairing;
+    await pairing.populate(['mentor', 'mentee', 'observers']);
 
-    // Start with an empty query object
-    let query = {};
-
-    // 1. Apply Status Filter
-    if (status) {
-      query.status = status;
-    }
-
-    // 2. Apply Role Filter (Safe from case-sensitivity and overwriting)
-    const roleLower = role ? role.toLowerCase() : null;
-
-    if (roleLower === 'mentor') {
-      query.mentor = userId;
-    } else if (roleLower === 'mentee') {
-      query.mentee = userId;
-    } else if (roleLower === 'observer') {
-      query.observers = userId;
-    } else {
-      // Default: If no specific role is selected, get everything the user is involved in
-      query.$or = [
-        { mentor: userId },
-        { mentee: userId },
-        { observers: userId }
-      ];
-    }
-
-    const pairings = await Pairing.find(query)
-      .populate('mentor', 'name email')
-      .populate('mentee', 'name email')
-      .populate('observers', 'name email')
-      .sort({ createdAt: -1 });
-
-    res.json(pairings);
+    res.json({
+      pairing,
+      userRole: req.userRole
+    });
   } catch (err) {
     console.error(err.message);
     res.status(500).send('Server Error');
@@ -187,7 +142,7 @@ router.put('/:pairingId/observers', [
 
     pairing.observers.push(observer.id);
     await pairing.save();
-    
+
     // Repopulate for response
     await pairing.populate(['mentor', 'mentee', 'observers']);
     res.json(pairing);
@@ -203,11 +158,11 @@ router.put('/:pairingId/observers', [
 router.delete('/:pairingId/observers/:observerId', checkRole(['Mentor', 'Mentee']), async (req, res) => {
   try {
     const pairing = req.pairing;
-    
+
     pairing.observers = pairing.observers.filter(
       obs => obs.toString() !== req.params.observerId
     );
-    
+
     await pairing.save();
     res.json(pairing);
   } catch (err) {
@@ -231,7 +186,7 @@ router.put('/:pairingId/status', [
   try {
     const pairing = req.pairing;
     pairing.status = req.body.status;
-    
+
     if (req.body.status === 'Ended' && !pairing.endDate) {
       pairing.endDate = Date.now();
     }

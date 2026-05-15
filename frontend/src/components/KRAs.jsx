@@ -165,7 +165,9 @@ const KRAs = ({ pairingId, isParticipant, isEnded }) => {
                 
                 {kra.kpis && kra.kpis.length > 0 ? (
                   <div className="space-y-4">
-                    {kra.kpis.map(kpi => (
+                    {kra.kpis.map(kpi => {
+                      const { percent, isComplete } = getKpiProgress(kpi);
+                      return (
                       <div key={kpi._id} className={`border rounded-lg p-4 transition-all ${kpi.status === 'On track' ? 'border-green-100 bg-green-50/10' : kpi.status === 'At risk' ? 'border-yellow-100 bg-yellow-50/10' : 'border-red-100 bg-red-50/10'}`}>
                         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                           <div className="flex-1">
@@ -175,8 +177,13 @@ const KRAs = ({ pairingId, isParticipant, isEnded }) => {
                             </div>
                             
                             {/* KPI Visual Bar */}
-                            <div className="mt-3 bg-gray-100 rounded-full h-2 w-full max-w-md overflow-hidden flex">
-                              <div className={`h-full rounded-full ${kpi.status === 'On track' ? 'bg-green-500 w-full' : kpi.status === 'At risk' ? 'bg-yellow-500 w-2/3' : 'bg-red-500 w-1/3'}`}></div>
+                            <div className="mt-3 bg-gray-100 rounded-full h-2 w-full max-w-md overflow-hidden">
+                              {percent > 0 && (
+                                <div
+                                  className={`h-full rounded-full transition-all duration-300 ${isComplete ? 'bg-green-500' : 'bg-blue-500'}`}
+                                  style={{ width: `${percent}%` }}
+                                />
+                              )}
                             </div>
                             
                             <div className="flex items-center space-x-4 mt-2 text-sm">
@@ -256,7 +263,8 @@ const KRAs = ({ pairingId, isParticipant, isEnded }) => {
                           </div>
                         )}
                       </div>
-                    ))}
+                    );
+                    })}
                   </div>
                 ) : <p className="text-sm text-gray-500">No KPIs defined under this KRA.</p>}
 
