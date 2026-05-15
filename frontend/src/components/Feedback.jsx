@@ -120,7 +120,7 @@ const Feedback = ({ pairingId, isParticipant, isEnded }) => {
       ) : (
         <div className="space-y-4">
           {feedbackList.map(f => {
-            const isAuthor = f.from._id === user.id;
+            const isAuthor = f.from._id === (user.id || user._id);
             return (
               <div 
                 key={f._id} 

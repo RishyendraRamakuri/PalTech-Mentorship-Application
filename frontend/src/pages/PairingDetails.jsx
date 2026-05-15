@@ -24,7 +24,7 @@ const PairingDetails = () => {
   const fetchPairing = async () => {
     try {
       const res = await axios.get(`/pairings/${id}`);
-      setPairing(res.data);
+      setPairing(res.data.pairing);
     } catch (err) {
       toast.error('Error fetching pairing details');
     } finally {
@@ -39,7 +39,7 @@ const PairingDetails = () => {
   const handleAddObserver = async (e) => {
     e.preventDefault();
     try {
-      await axios.post(`/pairings/${id}/observers`, { observerEmail });
+      await axios.put(`/pairings/${id}/observers`, { email: observerEmail });
       toast.success('Observer added');
       setIsObserverModalOpen(false);
       setObserverEmail('');
@@ -74,7 +74,8 @@ const PairingDetails = () => {
   if (loading) return <div className="flex justify-center py-20"><div className="w-10 h-10 border-4 border-blue-600 rounded-full border-t-transparent animate-spin"></div></div>;
   if (!pairing) return <div className="text-center py-20 text-gray-500">Pairing not found.</div>;
 
-  const isParticipant = pairing.mentor._id === user.id || pairing.mentee._id === user.id;
+  const currentUserId = user.id || user._id;
+  const isParticipant = pairing.mentor._id === currentUserId || pairing.mentee._id === currentUserId;
   const isEnded = pairing.status === 'Ended';
 
   const statusColors = {

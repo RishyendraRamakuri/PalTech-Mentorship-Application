@@ -38,7 +38,10 @@ const Dashboard = () => {
   const handleCreatePairing = async (e) => {
     e.preventDefault();
     try {
-      await axios.post('/pairings', { menteeEmail });
+      await axios.post('/pairings', { 
+        mentorEmail: user.email,
+        menteeEmail 
+      });
       toast.success('Pairing created successfully!');
       setIsModalOpen(false);
       setMenteeEmail('');
@@ -107,9 +110,10 @@ const Dashboard = () => {
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {pairings.map(p => {
+            const currentUserId = user.id || user._id;
             let role = 'Observer';
-            if (p.mentor._id === user.id) role = 'Mentor';
-            else if (p.mentee._id === user.id) role = 'Mentee';
+            if (p.mentor._id === currentUserId) role = 'Mentor';
+            else if (p.mentee._id === currentUserId) role = 'Mentee';
 
             const statusColors = {
               'Active': 'bg-green-100 text-green-800 border-green-200',
