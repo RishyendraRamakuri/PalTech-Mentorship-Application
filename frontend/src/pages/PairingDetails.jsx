@@ -8,12 +8,12 @@ import OneOnOnes from '../components/OneOnOnes';
 import Feedback from '../components/Feedback';
 import KRAs from '../components/KRAs';
 
-const PairingDetails = () => {
+const Pairefdd = () => {
   const { id } = useParams();
   const { user } = useAuth();
   const [pairing, setPairing] = useState(null);
   const [loading, setLoading] = useState(true);
-  
+
   // Modals
   const [isObserverModalOpen, setIsObserverModalOpen] = useState(false);
   const [observerEmail, setObserverEmail] = useState('');
@@ -104,7 +104,7 @@ const PairingDetails = () => {
               </span>
             </div>
             <h1 className="text-2xl font-bold text-gray-900 mt-2">Mentorship Engagement</h1>
-            
+
             <div className="flex items-center space-x-8 mt-6">
               <div>
                 <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">Mentor</p>
@@ -177,21 +177,21 @@ const PairingDetails = () => {
       {/* Horizontal Tabs */}
       <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden mt-8">
         <div className="flex border-b border-gray-200">
-          <button 
+          <button
             onClick={() => setActiveTab('1on1s')}
             className={`flex-1 py-4 text-sm font-medium flex items-center justify-center space-x-2 transition-all ${activeTab === '1on1s' ? 'border-b-2 border-blue-600 text-blue-600 bg-blue-50/50' : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'}`}
           >
             <Calendar size={18} />
             <span>1:1 Sessions</span>
           </button>
-          <button 
+          <button
             onClick={() => setActiveTab('feedback')}
             className={`flex-1 py-4 text-sm font-medium flex items-center justify-center space-x-2 transition-all ${activeTab === 'feedback' ? 'border-b-2 border-blue-600 text-blue-600 bg-blue-50/50' : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'}`}
           >
             <MessageSquare size={18} />
             <span>Feedback</span>
           </button>
-          <button 
+          <button
             onClick={() => setActiveTab('kras')}
             className={`flex-1 py-4 text-sm font-medium flex items-center justify-center space-x-2 transition-all ${activeTab === 'kras' ? 'border-b-2 border-blue-600 text-blue-600 bg-blue-50/50' : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'}`}
           >
@@ -223,10 +223,10 @@ const PairingDetails = () => {
             <form onSubmit={handleAddObserver} className="p-6 space-y-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Observer's Email</label>
-                <input 
-                  type="email" 
-                  required 
-                  value={observerEmail} 
+                <input
+                  type="email"
+                  required
+                  value={observerEmail}
                   onChange={e => setObserverEmail(e.target.value)}
                   className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
                   placeholder="observer@example.com"
@@ -248,4 +248,4 @@ const PairingDetails = () => {
   );
 };
 
-export default PairingDetails;
+export default Pairefdd;
