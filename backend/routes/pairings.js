@@ -1,5 +1,9 @@
 const express = require('express');
+const fs = require('fs');
+const path = require('path');
 const router = express.Router();
+const DEBUG_LOG = path.join(__dirname, '../../debug-6e2177.log');
+const debugLog = (payload) => { try { fs.appendFileSync(DEBUG_LOG, JSON.stringify({ sessionId: '6e2177', timestamp: Date.now(), ...payload }) + '\n'); } catch (_) {} };
 const { body, validationResult } = require('express-validator');
 const Pairing = require('../models/Pairing');
 const User = require('../models/User');
@@ -59,21 +63,33 @@ router.get('/', async (req, res) => {
     const { status, role } = req.query;
     const userId = req.user.id;
 
-    let query = {
-      $or: [
-        { mentor: userId },
-        { mentee: userId },
-        { observers: userId }
-      ]
-    };
+    let query = {};
 
     if (status) {
       query.status = status;
     }
 
-    if (role === 'mentor') query = { mentor: userId };
-    else if (role === 'mentee') query = { mentee: userId };
-    else if (role === 'observer') query = { observers: userId };
+    const roleLower = role ? role.toLowerCase() : null;
+    let roleBranch = 'none';
+    if (roleLower === 'mentor') {
+      query.mentor = userId;
+      roleBranch = 'mentor';
+    } else if (roleLower === 'mentee') {
+      query.mentee = userId;
+      roleBranch = 'mentee';
+    } else if (roleLower === 'observer') {
+      query.observers = userId;
+      roleBranch = 'observer';
+    } else {
+      query.$or = [
+        { mentor: userId },
+        { mentee: userId },
+        { observers: userId }
+      ];
+    }
+    // #region agent log
+    debugLog({ runId: 'post-fix', location: 'pairings.js:GET-handler1', message: 'pairings filter', hypothesisId: 'A', data: { status, role, roleLower, roleBranch, queryKeys: Object.keys(query) } });
+    // #endregion
 
     const pairings = await Pairing.find(query)
       .populate('mentor', 'name email')
@@ -81,6 +97,9 @@ router.get('/', async (req, res) => {
       .populate('observers', 'name email')
       .sort({ createdAt: -1 });
 
+    // #region agent log
+    debugLog({ location: 'pairings.js:GET-handler1-result', message: 'pairings count', hypothesisId: 'A,B', data: { count: pairings.length, roleBranch } });
+    // #endregion
     res.json(pairings);
   } catch (err) {
     console.error(err.message);
@@ -91,16 +110,47 @@ router.get('/', async (req, res) => {
 // @route   GET /api/pairings/:pairingId
 // @desc    Get a single pairing by ID
 // @access  Private
-router.get('/:pairingId', checkRole(['Mentor', 'Mentee', 'Observer']), async (req, res) => {
+// @route   GET /api/pairings
+// @desc    Get all pairings for logged in user (with filters)
+// @access  Private
+router.get('/', async (req, res) => {
   try {
-    const pairing = req.pairing;
-    await pairing.populate(['mentor', 'mentee', 'observers']);
-    
-    // Return pairing details and the user's role on this pairing
-    res.json({
-      pairing,
-      userRole: req.userRole
-    });
+    const { status, role } = req.query;
+    const userId = req.user.id;
+
+    // Start with an empty query object
+    let query = {};
+
+    // 1. Apply Status Filter
+    if (status) {
+      query.status = status;
+    }
+
+    // 2. Apply Role Filter (Safe from case-sensitivity and overwriting)
+    const roleLower = role ? role.toLowerCase() : null;
+
+    if (roleLower === 'mentor') {
+      query.mentor = userId;
+    } else if (roleLower === 'mentee') {
+      query.mentee = userId;
+    } else if (roleLower === 'observer') {
+      query.observers = userId;
+    } else {
+      // Default: If no specific role is selected, get everything the user is involved in
+      query.$or = [
+        { mentor: userId },
+        { mentee: userId },
+        { observers: userId }
+      ];
+    }
+
+    const pairings = await Pairing.find(query)
+      .populate('mentor', 'name email')
+      .populate('mentee', 'name email')
+      .populate('observers', 'name email')
+      .sort({ createdAt: -1 });
+
+    res.json(pairings);
   } catch (err) {
     console.error(err.message);
     res.status(500).send('Server Error');

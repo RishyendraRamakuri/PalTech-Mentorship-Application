@@ -93,7 +93,7 @@ router.post('/kras/:kraId/kpis', [
       pairing: req.params.pairingId,
       title: req.body.title,
       targetValue: req.body.targetValue,
-      currentValue: req.body.currentValue || '',
+      currentValue: req.body.currentValue || '0',
       status: req.body.status || 'On track',
       dueDate: req.body.dueDate,
       createdBy: req.user.id
