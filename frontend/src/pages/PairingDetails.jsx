@@ -201,7 +201,7 @@ const PairingDetails = () => {
         </div>
 
         <div className="p-6 bg-gray-50/30">
-          {activeTab === '1on1s' && <OneOnOnes pairingId={id} isParticipant={isParticipant} isEnded={isEnded} />}
+          {activeTab === '1on1s' && <OneOnOnes pairing={pairing} pairingId={id} isParticipant={isParticipant} isEnded={isEnded} />}
           {activeTab === 'feedback' && <Feedback pairingId={id} isParticipant={isParticipant} isEnded={isEnded} />}
           {activeTab === 'kras' && <KRAs pairingId={id} isParticipant={isParticipant} isEnded={isEnded} />}
         </div>
