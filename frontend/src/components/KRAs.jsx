@@ -104,6 +104,22 @@ const KRAs = ({ pairingId, isParticipant, isEnded }) => {
 
   if (loading) return <div className="py-10 text-center text-gray-500 flex justify-center"><div className="w-8 h-8 border-4 border-blue-600 rounded-full border-t-transparent animate-spin"></div></div>;
 
+  const parseNumericValue = (value) => {
+    if (value == null || value === '') return null;
+    const parsed = parseFloat(String(value).replace(/[^0-9.-]/g, ''));
+    return Number.isFinite(parsed) ? parsed : null;
+  };
+
+  const getKpiProgress = (kpi) => {
+    const current = parseNumericValue(kpi.currentValue);
+    const target = parseNumericValue(kpi.targetValue);
+    if (current == null || target == null || target <= 0) {
+      return { percent: 0, isComplete: false };
+    }
+    const percent = Math.min(100, Math.max(0, (current / target) * 100));
+    return { percent, isComplete: current >= target };
+  };
+
   const StatusIcon = ({ status }) => {
     if (status === 'On track') return <CheckCircle size={16} className="text-green-500" />;
     if (status === 'At risk') return <AlertTriangle size={16} className="text-yellow-500" />;
